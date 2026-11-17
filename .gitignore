@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Local configuration
+.env
+.env.*
+!.env.example
+
+# Uploaded documents and generated vector indexes
+data/uploads/*
+!data/uploads/.gitkeep
+data/faiss_index/*
+!data/faiss_index/.gitkeep
+
+# Test and tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
