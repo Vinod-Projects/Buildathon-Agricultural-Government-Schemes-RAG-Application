@@ -2,7 +2,7 @@
 
 A beginner-friendly Retrieval-Augmented Generation (RAG) application for answering questions from agricultural government scheme PDFs uploaded by the user. Answers will be grounded in those documents, with source filenames and page information where available.
 
-> **Build status:** Phases 1–7 are documented and implemented. The 14-test suite passes; tests mock the embedding model and Ollama responses.
+> **Build status:** Phases 1–7 are documented and implemented. The 23-test suite passes; tests mock external model and service responses.
 
 ## Phase 1 — Understand the project
 
@@ -101,6 +101,7 @@ Copy `.env.example` to `.env` if you need to change local settings. `.env` is ig
 │   ├── schemas.py              # API request and response models
 │   ├── ingestion.py            # PDF validation, extraction, chunking, and indexing
 │   ├── embeddings.py           # Shared embedding model
+│   ├── scheme_import.py        # Official scheme-page parsing and PDF generation
 │   ├── store.py                # Persistent FAISS index and document metadata
 │   ├── retrieval.py            # Similarity search and source metadata
 │   ├── llm.py                  # Grounded Ollama responses
@@ -108,6 +109,8 @@ Copy `.env.example` to `.env` if you need to change local settings. `.env` is ig
 ├── frontend/
 │   ├── app.py                  # Streamlit interface
 │   └── requirements.txt
+├── scripts/
+│   └── import_tn_schemes.py    # Download, convert, and upload Tamil Nadu schemes
 ├── tests/
 │   ├── test_api.py
 │   ├── test_ingestion.py
@@ -115,6 +118,7 @@ Copy `.env.example` to `.env` if you need to change local settings. `.env` is ig
 │   └── test_store.py
 ├── data/
 │   ├── uploads/                # Local uploaded PDFs (not committed)
+│   ├── scheme_pdfs/            # Locally generated scheme PDFs (not committed)
 │   └── faiss_index/            # Persistent FAISS data (not committed)
 ├── .env.example
 ├── .gitignore
@@ -189,6 +193,24 @@ Install the application and test dependencies into the project virtual environme
 ```
 
 The tests cover valid, invalid, empty, and textless PDFs; duplicate and multiple uploads; FAISS persistence and nearest-vector ordering; grounded-answer instructions and source metadata; empty-index questions; and Ollama connection failures. The tests mock the embedding model and Ollama service, so they do not need model downloads or a running Ollama server.
+
+## Import schemes from the Tamil Nadu Government portal
+
+The configured department page is `https://www.tn.gov.in/scheme_list.php?dep_id=Mg==`. Its current scheme entries link to HTML detail pages; a checked example has no attached scheme PDF (`Uploaded File: -`). The importer therefore creates one readable PDF per scheme from the detail-page fields, including its official source URL, and uploads each generated PDF to the running app through `POST /upload-pdf`. These are locally generated reference PDFs, not original government-issued PDF files.
+
+Start FastAPI first. In another terminal, activate the project environment or call its Python directly, then run a small test import:
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.import_tn_schemes --limit 2 --verbose
+```
+
+To import all schemes on that department page:
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.import_tn_schemes
+```
+
+The PDFs are saved under `data/scheme_pdfs/` and indexed through the same API as uploaded PDFs, so they appear in **Indexed documents** and can be queried from **Ask a question** in Streamlit. The importer stays on `www.tn.gov.in`, uses a short delay between detail-page requests, and sends uploads in batches. Do not run imports while another process is simultaneously writing to the FAISS index. If a batch reports an error, fix the cause and rerun; already-indexed identical documents are skipped automatically.
 
 ## Phase 7 — Documentation and presentation walkthrough
 

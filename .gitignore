@@ -18,6 +18,8 @@ data/uploads/*
 !data/uploads/.gitkeep
 data/faiss_index/*
 !data/faiss_index/.gitkeep
+data/scheme_pdfs/*
+!data/scheme_pdfs/.gitkeep
 
 # Test and tooling caches
 .pytest_cache/
